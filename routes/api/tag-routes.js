@@ -13,7 +13,16 @@ router.get('/', async(req, res) => {
   }
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', async(req, res) => {
+  try {
+    const id = req.params.id
+    const tags = await Tag.findOne({where: { id: id }})
+
+    return res.status(200).json(tags);
+  } catch (err) {
+    res.status(500).json(err);
+    return;
+  }
   // find a single tag by its `id`
   // be sure to include its associated Product data
 });

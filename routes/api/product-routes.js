@@ -6,9 +6,24 @@ seedProducts();
 
 // get all products
 router.get('/', async (req, res) => {
-  try{
-    const products = await Product.findAll();
-    res.status(200).json(products)
+  try {
+    const { category_id } = req.query;
+
+    let products;
+
+    if (category_id) {
+      // Search for products by category_id if provided
+      products = await Product.findAll({
+        where: {
+          category_id: category_id,
+        },
+      });
+    } else {
+      // Retrieve all products if no category_id is provided
+      products = await Product.findAll();
+    }
+
+    res.status(200).json(products);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -30,35 +45,27 @@ router.get('/:id', async(req, res) => {
 });
 
 // create new product
-router.post('/', (req, res) => {
-  /* req.body should look like this...
-    {
-      product_name: "Basketball",
-      price: 200.00,
-      stock: 3,
-      tagIds: [1, 2, 3, 4]
-    }
-  */
-  Product.create(req.body)
-    .then((product) => {
-      // if there's product tags, we need to create pairings to bulk create in the ProductTag model
-      if (req.body.tagIds.length) {
-        const productTagIdArr = req.body.tagIds.map((tag_id) => {
-          return {
-            product_id: product.id,
-            tag_id,
-          };
-        });
-        return ProductTag.bulkCreate(productTagIdArr);
-      }
-      // if no product tags, just respond
-      res.status(200).json(product);
-    })
-    .then((productTagIds) => res.status(200).json(productTagIds))
-    .catch((err) => {
-      console.log(err);
-      res.status(400).json(err);
-    });
+router.post('/', async (req, res) => {
+
+  const category = await Category.findOne({
+    where: {
+      category_name: req.body.category_name,
+    },
+  });
+
+  if(!category) {
+    return res.status(404).json({ error: 'Category not found' });
+  };
+
+  const createProducts = await Product.create({
+    product_name: req.body.product_name,
+    price: req.body.price,
+    stock: req.body.stock,
+    category_id: category.id,
+  });
+
+  return res.status(200).json(createProducts);
+
 });
 
 // update product
@@ -106,8 +113,27 @@ router.put('/:id', (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async(req, res) => {
   // delete one product by its `id` value
+  try {
+    const id = req.params.id;
+
+    const deleteProduct = await Product.destroy({
+      where: {
+        id: id,
+      }
+    });
+
+    if (deleteProduct === 0) {
+      res.status(404).json({ error: 'Category Does Not Exist!'})
+    } else {
+      console.log('Product Deleted Successfully!')
+      res.status(200).json(deleteProduct);
+    }
+  } catch (err){
+    res.status(500).json(err);
+    return;
+  }
 });
 
 module.exports = router;

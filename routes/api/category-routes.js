@@ -7,19 +7,32 @@ seedCategories();
 // The `/api/categories` endpoint
 
 router.get('/', async (req, res) => {
-  try{
-    const category = await Category.findAll()
-    res.status(200).json({category});
+  try {
+    const categories = await Category.findAll({
+      include: {
+        model: Product,
+        attributes: ['id', 'product_name', 'price', 'stock'],
+      },
+    });
+
+    res.status(200).json({categories});
   } catch (err) {
     res.status(500).json(err);
-    return;
   }
 });
 
 router.get('/:id', async (req, res) => {
   try {
     const id = req.params.id
-    const category = await Category.findOne({where: { id: id }})
+    const category = await Category.findOne({
+      where: {
+         id: id
+        },
+        include: {
+          model: Product,
+          attributes: ['id', 'product_name', 'price', 'stock'],
+        },
+    })
 
     return res.status(200).json(category);
   } catch (err) {

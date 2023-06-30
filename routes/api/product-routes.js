@@ -20,7 +20,16 @@ router.get('/', async (req, res) => {
       });
     } else {
       // Retrieve all products if no category_id is provided
-      products = await Product.findAll();
+      products = await Product.findAll({
+        include: {
+          model: Category,
+          attributes: ['id', 'category_name'],
+        },
+        include: {
+          model: Tag,
+          attributes: ['id', 'tag_name'],
+        },
+      });
     }
 
     res.status(200).json(products);
@@ -33,7 +42,19 @@ router.get('/', async (req, res) => {
 router.get('/:id', async(req, res) => {
   try {
     const id = req.params.id
-    const products = await Product.findOne({where: { id: id }})
+    const products = await Product.findOne({
+      where: {
+         id: id 
+        }, 
+      include: {
+        model: Category,
+        attributes: ['id', 'category_name'],
+      },
+      include: {
+        model: Tag,
+        attributes: ['id', 'tag_name'],
+      },
+    });
 
     return res.status(200).json(products);
   } catch (err) {

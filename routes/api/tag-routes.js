@@ -6,7 +6,12 @@ seedTag();
 
 router.get('/', async(req, res) => {
   try{
-    const tags = await Tag.findAll();
+    const tags = await Tag.findAll({
+      include: {
+        model: Product,
+        attributes: ['id', 'product_name', 'price', 'stock', 'category_id'],
+      },
+    });
     res.status(200).json(tags)
   } catch (err) {
     res.status(500).json(err);
@@ -16,7 +21,14 @@ router.get('/', async(req, res) => {
 router.get('/:id', async(req, res) => {
   try {
     const id = req.params.id
-    const tags = await Tag.findOne({where: { id: id }})
+    const tags = await Tag.findOne({
+      where: {
+         id: id 
+        },  include: {
+          model: Product,
+          attributes: ['id', 'product_name', 'price', 'stock', 'category_id'],
+        },
+      });
 
     return res.status(200).json(tags);
   } catch (err) {
